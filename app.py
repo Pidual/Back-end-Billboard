@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, Response, jsonify, redirect, url_for
+from flask_cors import CORS
 import database as dbase
 from music import Music
 from bson.json_util import dumps
@@ -6,6 +7,7 @@ from bson.json_util import dumps
 db = dbase.dbConnection()
 #db.db()
 app = Flask(__name__)
+CORS(app)
 
 # Rutas de la aplicacion
 @app.route('/')  # Primera ruta
@@ -37,11 +39,15 @@ def addSong():
         return notFound()
 
 # Method DELETE
-@app.route('/delete/<string:song_name>')
+@app.route('/delete/<string:song_name>', methods=['DELETE'])
 def delete(song_name):
     billboard_collection = db['billboard']
-    billboard_collection.delete_one({'song_name': song_name})
-    return redirect(url_for('home'))
+    result = billboard_collection.delete_one({'song_name': song_name})
+    if result.deleted_count > 0:
+        return jsonify({'message': 'Song deleted successfully'}), 204
+    else:
+        return jsonify({'message': 'Song not found'}), 404
+
 
 # Method UPDATE
 @app.route('/edit/<string:song_name>', methods=['POST'])
