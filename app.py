@@ -14,13 +14,14 @@ CORS(app)
 def home():
     return "Welcome to the Billboard API!"
 
+# READ WORKING
 @app.route('/songs', methods=['GET'])
 def get_songs():
     billboard_collection = db['billboard']
     data = list(billboard_collection.find())
     return Response(dumps(data), mimetype='application/json')
 
-# CREATE
+# CREATE WORKING
 @app.route('/music', methods=['POST'])
 def addSong():
     billboard_collection = db['billboard']
@@ -42,7 +43,7 @@ def addSong():
 @app.route('/delete/<string:song_name>', methods=['DELETE'])
 def delete(song_name):
     billboard_collection = db['billboard']
-    result = billboard_collection.delete_one({'song_name': song_name})
+    result = billboard_collection.delete_one({'Song Name': song_name})
     if result.deleted_count > 0:
         return jsonify({'message': 'Song deleted successfully'}), 204
     else:
@@ -50,20 +51,19 @@ def delete(song_name):
 
 
 # Method UPDATE
-@app.route('/edit/<string:song_name>', methods=['POST'])
+@app.route('/edit/<string:song_name>', methods=['PATCH'])
 def edit(song_name):
     billboard_collection = db['billboard']
-    rank = request.form['rank']
-    new_song_name = request.form['song_name']
-    singer = request.form['singer']
-    last_week = request.form['last_week']
-    peak_position = request.form['peak_position']
-    weeks_on_chart = request.form['weeks_on_chart']
-
+    rank = request.json.get('rank')
+    new_song_name = request.json.get('song_name')
+    singer = request.json.get('singer')
+    last_week = request.json.get('last_week')
+    peak_position = request.json.get('peak_position')
+    weeks_on_chart = request.json.get('weeks_on_chart')
+    
     if rank and new_song_name and last_week and singer and peak_position and weeks_on_chart:
-        music = Music(rank, new_song_name, last_week, singer, peak_position, weeks_on_chart)
-        billboard_collection.update_one(
-            {'song_name': song_name},
+        result = billboard_collection.update_one(
+            {'Song Name': song_name},
             {'$set': {
                 'Rank': rank,
                 'Song Name': new_song_name,
@@ -73,9 +73,12 @@ def edit(song_name):
                 'Weeks on Chart': weeks_on_chart
             }}
         )
-        return redirect(url_for('home'))
+        if result.modified_count > 0:
+            return jsonify({'message': 'Song updated successfully'}), 200
+        else:
+            return jsonify({'message': 'Song not found'}), 404
     else:
-        return notFound()
+        return jsonify({'message': 'Incomplete or invalid data provided'}), 400
 
 # READ
 @app.route('/song/year/<int:year>', methods=['GET'])
