@@ -60,7 +60,7 @@ def edit(song_name):
     last_week = request.json.get('last_week')
     peak_position = request.json.get('peak_position')
     weeks_on_chart = request.json.get('weeks_on_chart')
-    
+
     if rank and new_song_name and last_week and singer and peak_position and weeks_on_chart:
         result = billboard_collection.update_one(
             {'Song Name': song_name},
@@ -80,11 +80,17 @@ def edit(song_name):
     else:
         return jsonify({'message': 'Incomplete or invalid data provided'}), 400
 
-# READ
-@app.route('/song/year/<int:year>', methods=['GET'])
-def get_events_by_year(year):
-    filtered_data = [event for event in data_dict if event['Año'] == year]
-    return jsonify(filtered_data)
+# READ 
+@app.route('/songs/<string:song_name>', methods=['GET'])
+def get_song(song_name):
+    billboard_collection = db['billboard']
+    song = billboard_collection.find_one({'Song Name': song_name})
+    if song:
+        song['_id'] = str(song['_id'])
+    if song:
+        return jsonify(song), 200
+    else:
+        return jsonify({'message': 'Song not found'}), 404
 
 @app.errorhandler(404)
 def notFound(error=None):
