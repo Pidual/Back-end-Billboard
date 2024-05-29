@@ -33,7 +33,7 @@ def addSong():
     weeks_on_chart = request.form['weeks_on_chart']
 
     if rank and song_name and last_week and singer and peak_position and weeks_on_chart:
-        music = Music(rank, song_name, last_week, singer, peak_position, weeks_on_chart)
+        music = Music(rank, song_name, singer,last_week,peak_position, weeks_on_chart)
         billboard_collection.insert_one(music.toDBCollection())
         return redirect(url_for('home'))
     else:
@@ -81,10 +81,11 @@ def edit(song_name):
         return jsonify({'message': 'Incomplete or invalid data provided'}), 400
 
 # READ 
-@app.route('/songs/<string:song_name>', methods=['GET'])
+@app.route('/song/<string:song_name>', methods=['GET'])
 def get_song(song_name):
     billboard_collection = db['billboard']
     song = billboard_collection.find_one({'Song Name': song_name})
+    print(song_name)
     if song:
         song['_id'] = str(song['_id'])
     if song:
